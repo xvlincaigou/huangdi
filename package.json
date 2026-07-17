@@ -1,0 +1,16 @@
+{
+  "name": "huangdi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "皇帝成长计划 · 网页复刻版（纯前端，GitHub Pages 托管）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node test/sim.js && node test/smoke.js"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0"
+  }
+}

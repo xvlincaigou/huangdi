@@ -1,8 +1,5 @@
 /* 皇帝成长计划 · 网页复刻版 —— 游戏引擎（纯逻辑，不依赖 DOM） */
-(function (g) {
-'use strict';
-
-const DATA = g.DATA;
+import { DATA } from './data.js';
 
 /* ---------- 工具 ---------- */
 function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
@@ -755,7 +752,7 @@ function gameOver(s, reason) {
 }
 
 /* ---------- 导出 ---------- */
-g.Engine = {
+export const Engine = {
   newGame, save, loadSave, hasSave,
   holdCourt, skipCourt, endCourt,
   dismiss, appoint,
@@ -768,4 +765,3 @@ g.Engine = {
   armyPower, avgQinglian, conqueredCount, canCourt,
   DATA
 };
-})(typeof window !== 'undefined' ? window : globalThis);

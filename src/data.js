@@ -1,8 +1,5 @@
 /* 皇帝成长计划 · 网页复刻版 —— 静态数据 */
-(function (g) {
-'use strict';
-
-const DATA = {
+export const DATA = {
   periods: ['清晨', '晌午', '晚上', '深夜'],
   months: ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '冬月', '腊月'],
 
@@ -62,6 +59,3 @@ const DATA = {
     '【寿命】年龄达到寿数即驾崩。炼丹房可炼制延寿丹。保重龙体，开创你的盛世吧！'
   ]
 };
-
-g.DATA = DATA;
-})(typeof window !== 'undefined' ? window : globalThis);

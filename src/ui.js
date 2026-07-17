@@ -1,14 +1,56 @@
 /* 皇帝成长计划 · 网页复刻版 —— UI 渲染层 */
-(function () {
-'use strict';
+import { DATA } from './data.js';
+import { Engine as E } from './engine.js';
+import { SCENES } from './scenes.js';
+import { avatar } from './avatars.js';
 
-const E = window.Engine;
-const DATA = window.DATA;
 let S = null;               // 当前游戏状态
 let courtTab = 'li';        // 吏/户/礼/兵/刑/工
-let placeView = null;       // null=地图, 'harem'=后宫
+let placeView = null;       // null=舆图, 'harem'=后宫, 其他=地点 key
 
 const $ = sel => document.querySelector(sel);
+
+/* ---------- 场景图（名画素材，缺失时回退 SVG） ---------- */
+const SCENE_IMGS = {
+  banner: 'assets/scenes/banner.jpg',
+  court: 'assets/scenes/court.jpg',
+  harem: 'assets/scenes/harem.jpg',
+  study: 'assets/scenes/study.jpg',
+  martial: 'assets/scenes/martial.jpg',
+  temple: 'assets/scenes/temple.jpg',
+  hunt: 'assets/scenes/hunt.jpg',
+  yipinlou: 'assets/scenes/yipinlou.jpg',
+  lihuayuan: 'assets/scenes/lihuayuan.jpg',
+  doctor: 'assets/scenes/doctor.jpg',
+  alchemy: 'assets/scenes/alchemy.jpg',
+  rest: 'assets/scenes/rest.jpg',
+  sleep: 'assets/scenes/sleep.jpg',
+  ending: 'assets/scenes/ending.jpg'
+};
+function sceneHTML(name, caption) {
+  if (SCENE_IMGS[name]) {
+    return '<div class="scene-frame"><img src="' + SCENE_IMGS[name] + '" alt="' + esc(caption || name) + '" loading="lazy"></div>';
+  }
+  if (SCENES[name]) {
+    return '<div class="scene-frame">' + SCENES[name](S ? S.period : 1) + '</div>';
+  }
+  return '';
+}
+
+/* ---------- 地点配置 ---------- */
+const PLACES = {
+  study:     { name: '藏书阁', desc: '汗牛充栋，书香四溢。',       act: 'study',     actLabel: '苦读诗书', effect: '文学↑ · 体力-8' },
+  martial:   { name: '习武场', desc: '沙场点兵，刀枪林立。',       act: 'martial',   actLabel: '操练武艺', effect: '武艺↑ · 体力-12' },
+  music:     { name: '琴音楼', desc: '丝竹之声，余音绕梁。',       act: 'music',     actLabel: '抚琴弄曲', effect: '才艺↑ · 体力-8' },
+  temple:    { name: '佛寺',   desc: '古刹钟声，香烟缭绕。',       act: 'temple',    actLabel: '听经礼佛', effect: '道德↑ · 体力-5' },
+  hunt:      { name: '围猎场', desc: '秋高马肥，正是围猎时节。',   act: 'hunt',      actLabel: '纵马围猎', effect: '体能↑ · 体力-15（秋季更佳）' },
+  doctor:    { name: '太医院', desc: '药香扑鼻，太医恭候。',       act: 'doctor',    actLabel: '请脉调养', effect: '健康↑ · 每月一次' },
+  yipinlou:  { name: '一品楼', desc: '京城第一楼，三教九流汇聚。', act: 'yipinlou',  actLabel: '寻访包打听', effect: '正月/七月现身 · 50万两' },
+  lihuayuan: { name: '梨花苑', desc: '梨花院落，笙歌彻夜。',       act: 'lihuayuan', actLabel: '听曲饮酒', effect: '快乐↑ 体力↑ 健康↓ · 20万两' },
+  alchemy:   { name: '炼丹房', desc: '丹炉青烟袅袅，炉火纯青。',   act: 'alchemy',   actLabel: '开炉炼丹', effect: '六成几率寿数+1 · 100万两' },
+  rest:      { name: '养心殿', desc: '静谧安宁，适合小憩。',       act: 'rest',      actLabel: '小憩片刻', effect: '体力+25' },
+  xuanzheng: { name: '宣政殿', desc: '已经退朝了。明日清晨，再来理政。' }
+};
 
 /* ---------- 工具 ---------- */
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
@@ -37,13 +79,13 @@ function run(fn) {
 /* ---------- 渲染入口 ---------- */
 function render() {
   if (!S) return;
+  if (document.body) document.body.className = 'period-' + S.period;
   renderClock();
   renderVitals();
   renderAttrs();
   renderLog();
   if (S.over) { renderEnding(); return; }
   renderPanel();
-  // 待抉择事件弹窗
   if (S.pending) renderPending();
 }
 
@@ -88,7 +130,8 @@ function renderPanel() {
   const p = $('#panel');
   if (S.period === 0 && !S.inCourt) {
     placeView = null;
-    p.innerHTML = '<h2>宣政殿</h2>' +
+    p.innerHTML = sceneHTML('court', '宣政殿') +
+      '<h2>宣政殿</h2>' +
       '<p class="desc">五更天，文武百官已列队殿外，等候早朝。</p>' +
       '<button class="btn primary" data-act="holdCourt">上朝理政</button> ' +
       '<button class="btn" data-act="skipCourt">今日罢朝</button>' +
@@ -98,43 +141,40 @@ function renderPanel() {
   if (S.inCourt) { renderCourt(p); return; }
   if (S.period === 3) {
     placeView = null;
-    p.innerHTML = '<h2>养心殿</h2>' +
+    p.innerHTML = sceneHTML('sleep', '深夜') +
+      '<h2>养心殿</h2>' +
       '<p class="desc">夜已深，宫中更鼓声声。安寝之后，便是新的一月。</p>' +
       '<button class="btn primary" data-act="sleep">回宫安寝（进入下一月）</button>';
     return;
   }
   if (placeView === 'harem') { renderHarem(p); return; }
+  if (placeView && PLACES[placeView]) { renderPlace(p, PLACES[placeView]); return; }
   renderMap(p);
 }
 
 function renderMap(p) {
-  const places = [
-    ['study', '藏书阁', '苦读诗书，文学↑'],
-    ['martial', '习武场', '操练武艺，武艺↑'],
-    ['music', '琴音楼', '抚琴弄曲，才艺↑'],
-    ['temple', '佛寺', '听经礼佛，道德↑'],
-    ['hunt', '围猎场', '纵马围猎，体能↑（秋季更佳）'],
-    ['doctor', '太医院', '请脉调养，健康↑（每月一次）'],
-    ['yipinlou', '一品楼', '包打听荐才（正月/七月）'],
-    ['lihuayuan', '梨花苑', '听曲饮酒，快乐↑体力↑'],
-    ['alchemy', '炼丹房', '开炉炼丹，可延寿（百万两/月）'],
-    ['rest', '养心殿', '小憩片刻，体力+25']
-  ];
   p.innerHTML = '<h2>皇城舆图</h2>' +
-    '<p class="desc">' + DATA.periods[S.period] + '时分，陛下想去何处？</p>' +
-    '<div class="grid">' +
-    places.map(([act, name, sub]) =>
-      '<div class="place"><div class="name">' + name + '</div><div class="sub">' + sub + '</div>' +
-      '<button class="btn small" data-act="' + act + '">前往</button></div>').join('') +
-    '<div class="place"><div class="name">后宫</div><div class="sub">妃嫔 ' + S.harem.length + ' 人 · 皇嗣 ' + S.children.length + ' 人</div>' +
-    '<button class="btn small" data-act="openHarem">前往</button></div>' +
-    '</div>';
+    '<p class="desc">' + DATA.periods[S.period] + '时分，陛下想去何处？点击舆图中的建筑。</p>' +
+    '<div class="scene-frame map-frame">' + SCENES.map(S.period) + '</div>';
+}
+
+function renderPlace(p, pl) {
+  const sceneKey = placeView === 'xuanzheng' ? 'court' : placeView;
+  let html = sceneHTML(sceneKey, pl.name);
+  html += '<h2>' + pl.name + '</h2><p class="desc">' + pl.desc + '</p>';
+  if (pl.act) {
+    html += '<p class="desc msg-gold">' + pl.effect + '</p>' +
+      '<button class="btn primary" data-act="' + pl.act + '">' + pl.actLabel + '</button> ';
+  }
+  html += '<button class="btn" data-act="closePlace">返回舆图</button>';
+  p.innerHTML = html;
 }
 
 /* ---------- 上朝 ---------- */
 function renderCourt(p) {
   const tabs = [['li', '吏部'], ['hu', '户部'], ['li2', '礼部'], ['bing', '兵部'], ['xing', '刑部'], ['gong', '工部']];
-  let html = '<h2>宣政殿 · 早朝</h2><div class="tabs">' +
+  let html = sceneHTML('court', '宣政殿') +
+    '<h2>宣政殿 · 早朝</h2><div class="tabs">' +
     tabs.map(([k, n]) => '<button class="btn small' + (courtTab === k ? ' active' : '') + '" data-tab="' + k + '">' + n + '</button>').join('') +
     '</div><div id="courtBody"></div>' +
     '<div style="margin-top:14px"><button class="btn primary" data-act="endCourt">退朝</button></div>';
@@ -157,12 +197,18 @@ function offCell(o, key) {
   return '<td' + cls + '>' + o[key] + '</td>';
 }
 
+function avCell(name, kind) {
+  return '<td class="av">' + avatar(name, kind, 40) + '</td>';
+}
+
 function renderLi(el) {
   let html = '<p class="desc">百官考课：<span class="msg-bad">野心＞忠诚或野心＞65 者易生异心</span>，清廉低者侵蚀税收。</p>' +
-    '<table class="tb"><tr><th>职位</th><th>姓名</th><th>忠诚</th><th>野心</th><th>清廉</th><th>智慧</th><th>武力</th><th></th></tr>';
+    '<table class="tb"><tr><th></th><th>职位</th><th>姓名</th><th>忠诚</th><th>野心</th><th>清廉</th><th>智慧</th><th>武力</th><th></th></tr>';
   DATA.posts.forEach(post => {
     const o = S.officials[post];
-    html += '<tr><td>' + post + '</td><td>' + (o ? esc(o.name) : '<span class="msg-bad">空缺</span>') + '</td>' +
+    const kind = post === '中央将军' ? 'general' : 'official';
+    html += '<tr>' + (o ? avCell(o.name, kind) : '<td class="av">-</td>') +
+      '<td>' + post + '</td><td>' + (o ? esc(o.name) : '<span class="msg-bad">空缺</span>') + '</td>' +
       offCell(o, 'zhongcheng') + offCell(o, 'yexin') + offCell(o, 'qinglian') + offCell(o, 'zhihui') + offCell(o, 'wuli') +
       '<td>' + (o ? '<button class="btn small danger" data-dismiss="' + post + '">罢免</button>' : '') + '</td></tr>';
   });
@@ -170,9 +216,10 @@ function renderLi(el) {
   html += '<h4>候补官员（' + S.idle.length + '/12）</h4>';
   if (!S.idle.length) html += '<p class="desc">暂无候补。可通过科举、一品楼荐才获得。</p>';
   else {
-    html += '<table class="tb"><tr><th>姓名</th><th>忠诚</th><th>野心</th><th>清廉</th><th>智慧</th><th>武力</th><th>任命为</th></tr>';
+    html += '<table class="tb"><tr><th></th><th>姓名</th><th>忠诚</th><th>野心</th><th>清廉</th><th>智慧</th><th>武力</th><th>任命为</th></tr>';
     S.idle.forEach(t => {
-      html += '<tr><td>' + esc(t.name) + '</td><td>' + t.zhongcheng + '</td><td>' + t.yexin + '</td><td>' + t.qinglian + '</td><td>' + t.zhihui + '</td><td>' + t.wuli + '</td>' +
+      html += '<tr>' + avCell(t.name, 'official') +
+        '<td>' + esc(t.name) + '</td><td>' + t.zhongcheng + '</td><td>' + t.yexin + '</td><td>' + t.qinglian + '</td><td>' + t.zhihui + '</td><td>' + t.wuli + '</td>' +
         '<td><select data-appoint="' + t.id + '"><option value="">选择职位</option>' +
         DATA.posts.map(post => '<option value="' + post + '">' + post + '</option>').join('') + '</select></td></tr>';
     });
@@ -213,7 +260,8 @@ function renderLi2(el) {
 
 function renderBing(el) {
   const power = Math.round(E.armyPower(S));
-  let html = '<p class="desc">现有兵马 <b class="msg-gold">' + S.army.soldiers + '</b> 万 · 训练度 ' + S.army.training +
+  let html = '<div class="scene-frame">' + SCENES.warmap(S.countries) + '</div>' +
+    '<p class="desc">现有兵马 <b class="msg-gold">' + S.army.soldiers + '</b> 万 · 训练度 ' + S.army.training +
     ' · 铁匠铺 ' + S.buildings.tiejiang + ' 级 · 综合战力 <b class="msg-gold">' + power + '</b></p>' +
     '<button class="btn small" data-recruit="10">征兵10万（20万两）</button> ' +
     '<button class="btn small" data-recruit="50">征兵50万（100万两）</button> ' +
@@ -255,10 +303,12 @@ function renderGong(el) {
 
 /* ---------- 后宫 ---------- */
 function renderHarem(p) {
-  let html = '<h2>后宫</h2><p class="desc"><button class="btn small" data-act="closeHarem">← 返回舆图</button></p>';
-  html += '<table class="tb"><tr><th>位份</th><th>姓名</th><th>魅力</th><th>宠爱</th><th></th></tr>';
+  let html = sceneHTML('harem', '后宫');
+  html += '<h2>后宫</h2><p class="desc"><button class="btn small" data-act="closePlace">← 返回舆图</button></p>';
+  html += '<table class="tb"><tr><th></th><th>位份</th><th>姓名</th><th>魅力</th><th>宠爱</th><th></th></tr>';
   S.harem.forEach(c => {
-    html += '<tr><td>' + c.title + '</td><td>' + esc(c.name) + '</td><td>' + c.meili + '</td><td>' + c.chongai + '</td><td>' +
+    html += '<tr>' + avCell(c.name, 'woman') +
+      '<td>' + c.title + '</td><td>' + esc(c.name) + '</td><td>' + c.meili + '</td><td>' + c.chongai + '</td><td>' +
       '<button class="btn small" data-visit="' + c.id + '">临幸</button> ' +
       '<button class="btn small" data-accompany="' + c.id + '">陪伴</button></td></tr>';
   });
@@ -277,9 +327,10 @@ function renderHarem(p) {
 function renderPending() {
   const pd = S.pending;
   if (pd.type === 'keju') {
-    let body = '<table class="tb"><tr><th>姓名</th><th>忠诚</th><th>野心</th><th>清廉</th><th>智慧</th><th>武力</th><th></th></tr>';
+    let body = '<table class="tb"><tr><th></th><th>姓名</th><th>忠诚</th><th>野心</th><th>清廉</th><th>智慧</th><th>武力</th><th></th></tr>';
     pd.list.forEach(c => {
-      body += '<tr><td>' + esc(c.name) + '</td><td>' + c.zhongcheng + '</td><td>' + c.yexin + '</td><td>' + c.qinglian + '</td><td>' + c.zhihui + '</td><td>' + c.wuli + '</td>' +
+      body += '<tr>' + avCell(c.name, 'official') +
+        '<td>' + esc(c.name) + '</td><td>' + c.zhongcheng + '</td><td>' + c.yexin + '</td><td>' + c.qinglian + '</td><td>' + c.zhihui + '</td><td>' + c.wuli + '</td>' +
         '<td><button class="btn small primary" data-keju="' + c.id + '">钦点</button></td></tr>';
     });
     body += '</table>';
@@ -292,7 +343,8 @@ function renderPending() {
       ]);
   } else if (pd.type === 'captive') {
     const girl = pd.girl;
-    modal('献俘', '<p>敌军献上美女 <b class="msg-gold">' + esc(girl.name) + '</b>（魅力 ' + girl.meili + '），如何处置？</p>',
+    modal('献俘', '<div style="text-align:center">' + avatar(girl.name, 'woman', 72) + '</div>' +
+      '<p>敌军献上美女 <b class="msg-gold">' + esc(girl.name) + '</b>（魅力 ' + girl.meili + '），如何处置？</p>',
       [
         { label: '纳入后宫', primary: true, fn: () => { closeModal(); run(() => E.captiveChoice(S, true)); } },
         { label: '遣散还乡', fn: () => { closeModal(); run(() => E.captiveChoice(S, false)); } }
@@ -303,7 +355,8 @@ function renderPending() {
 /* ---------- 结局 ---------- */
 function renderEnding() {
   const o = S.over;
-  $('#panel').innerHTML = '<div class="ending"><h2>驾 崩</h2>' +
+  $('#panel').innerHTML = sceneHTML('ending', '陵寝') +
+    '<div class="ending"><h2>驾 崩</h2>' +
     '<p>' + esc(o.reason) + '</p>' +
     '<div class="谥号">' + esc(o.title) + '</div>' +
     '<div class="score">一生功过评分：<b class="msg-gold">' + o.score + '</b></div>' +
@@ -313,9 +366,19 @@ function renderEnding() {
 }
 
 /* ---------- 事件绑定 ---------- */
+const CLICK_SEL = '[data-act],[data-goto],[data-tab],[data-dismiss],[data-tax],[data-trade],[data-recruit],[data-campaign],[data-build],[data-visit],[data-accompany],[data-keju]';
+function pickTarget(e) {
+  const t = e.target;
+  if (t && typeof t.closest === 'function') {
+    const c = t.closest(CLICK_SEL);
+    if (c) return c;
+  }
+  return t;
+}
+
 function bindEvents() {
   $('#topbtns').addEventListener('click', e => {
-    const cmd = e.target.dataset.cmd;
+    const cmd = e.target.dataset ? e.target.dataset.cmd : undefined;
     if (!cmd) return;
     if (cmd === 'save') { E.save(S); toast('已存档。'); }
     else if (cmd === 'load') {
@@ -335,26 +398,27 @@ function bindEvents() {
   });
 
   $('#panel').addEventListener('click', e => {
-    const t = e.target;
-    if (t.dataset.tab) { courtTab = t.dataset.tab; render(); return; }
-    if (t.dataset.dismiss) run(() => E.dismiss(S, t.dataset.dismiss));
-    else if (t.dataset.tax !== undefined) run(() => E.setTax(S, parseFloat(t.dataset.tax)));
-    else if (t.dataset.trade) run(() => E.startTrade(S, parseInt(t.dataset.trade)));
-    else if (t.dataset.recruit) run(() => E.recruitSoldiers(S, parseInt(t.dataset.recruit)));
-    else if (t.dataset.campaign) run(() => E.campaign(S, parseInt(t.dataset.campaign)));
-    else if (t.dataset.build) run(() => E.build(S, t.dataset.build));
-    else if (t.dataset.visit) run(() => E.haremVisit(S, parseInt(t.dataset.visit)));
-    else if (t.dataset.accompany) run(() => E.haremAccompany(S, parseInt(t.dataset.accompany)));
-    else if (t.dataset.act) {
-      const act = t.dataset.act;
+    const t = pickTarget(e);
+    const d = t.dataset || {};
+    if (d.tab) { courtTab = d.tab; render(); return; }
+    if (d.goto) { placeView = d.goto; render(); return; }
+    if (d.dismiss) run(() => E.dismiss(S, d.dismiss));
+    else if (d.tax !== undefined) run(() => E.setTax(S, parseFloat(d.tax)));
+    else if (d.trade) run(() => E.startTrade(S, parseInt(d.trade)));
+    else if (d.recruit) run(() => E.recruitSoldiers(S, parseInt(d.recruit)));
+    else if (d.campaign) run(() => E.campaign(S, parseInt(d.campaign)));
+    else if (d.build) run(() => E.build(S, d.build));
+    else if (d.visit) run(() => E.haremVisit(S, parseInt(d.visit)));
+    else if (d.accompany) run(() => E.haremAccompany(S, parseInt(d.accompany)));
+    else if (d.act) {
+      const act = d.act;
       if (act === 'holdCourt') run(() => E.holdCourt(S));
       else if (act === 'skipCourt') run(() => E.skipCourt(S));
       else if (act === 'endCourt') run(() => E.endCourt(S));
       else if (act === 'sleep') run(() => E.sleep(S));
-      else if (act === 'openHarem') { placeView = 'harem'; render(); }
-      else if (act === 'closeHarem') { placeView = null; render(); }
+      else if (act === 'closePlace') { placeView = null; render(); }
       else if (act === 'restart') { S = E.newGame(); placeView = null; E.save(S); render(); }
-      else if (E.actions[act]) run(() => E.actions[act](S));
+      else if (E.actions[act]) { placeView = null; run(() => E.actions[act](S)); }
       else if (act === 'keju') run(() => E.keju(S));
       else if (act === 'sacrifice') run(() => E.sacrifice(S));
       else if (act === 'census') run(() => E.census(S));
@@ -367,12 +431,12 @@ function bindEvents() {
 
   $('#panel').addEventListener('change', e => {
     const t = e.target;
-    if (t.dataset.appoint && t.value) run(() => E.appoint(S, t.value, parseInt(t.dataset.appoint)));
+    if (t.dataset && t.dataset.appoint && t.value) run(() => E.appoint(S, t.value, parseInt(t.dataset.appoint)));
   });
 
   $('#modal').addEventListener('click', e => {
-    const t = e.target;
-    if (t.dataset.keju) { closeModal(); run(() => E.kejuPick(S, parseInt(t.dataset.keju))); }
+    const t = pickTarget(e);
+    if (t.dataset && t.dataset.keju) { closeModal(); run(() => E.kejuPick(S, parseInt(t.dataset.keju))); }
   });
 }
 
@@ -380,9 +444,13 @@ function bindEvents() {
 function init() {
   S = E.loadSave() || E.newGame();
   E.save(S);
+  // 页头横幅
+  const bn = $('#bannerScene');
+  if (bn) bn.innerHTML = SCENE_IMGS.banner
+    ? '<img src="' + SCENE_IMGS.banner + '" alt="千里江山">'
+    : SCENES.banner();
   bindEvents();
   render();
 }
 
 document.addEventListener('DOMContentLoaded', init);
-})();

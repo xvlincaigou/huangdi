@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.venv/
+test/preview/
+.DS_Store
+downloads/

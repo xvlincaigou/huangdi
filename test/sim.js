@@ -1,10 +1,6 @@
 /* 无头模拟测试：在 node 中加载引擎，模拟玩家操作，验证逻辑与数值平衡 */
-'use strict';
-require('../js/data.js');
-require('../js/engine.js');
-
-const E = globalThis.Engine;
-const DATA = globalThis.DATA;
+import { DATA } from '../src/data.js';
+import { Engine as E } from '../src/engine.js';
 
 let failures = 0;
 function check(cond, label) {

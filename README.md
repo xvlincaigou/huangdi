@@ -1,9 +1,11 @@
 # 皇帝成长计划 · 网页复刻版
 
 经典 4399 小游戏《皇帝成长计划》的网页复刻（粉丝致敬作品，仅供学习娱乐）。
-纯 HTML/CSS/JS 实现，零依赖、零构建，打开即玩。
 
 **在线游玩**：https://xvlincaigou.github.io/huangdi/
+
+场景画面采用公有领域传世名画（《千里江山图》《清明上河图》《汉宫春晓图》等馆藏扫描件），
+详见 [public/assets/ATTRIBUTION.md](public/assets/ATTRIBUTION.md)。
 
 ## 玩法简介
 
@@ -17,32 +19,42 @@
   - **兵部** —— 征兵、操练，出征日本→突厥→吐蕃→印度→波斯，统一天下。
   - **刑部** —— 监察百官，敲打野心过高的臣子。
   - **工部** —— 营建集市、寺庙、书院、校场、铁匠铺、陵寝。
-- **自由行动**：藏书阁（文学）、习武场（武艺）、琴音楼（才艺）、佛寺（道德）、围猎场（体能）、太医院（健康）、一品楼（正月/七月荐才）、梨花苑（快乐）、炼丹房（延寿）、养心殿（休息）。
+- **自由行动**：点击皇城舆图中的建筑——藏书阁（文学）、习武场（武艺）、琴音楼（才艺）、佛寺（道德）、围猎场（体能）、太医院（健康）、一品楼（正月/七月荐才）、梨花苑（快乐）、炼丹房（延寿）、养心殿（休息）。
 - **后宫**：临幸妃嫔、三年选秀、诞育皇嗣、册立储君。
 - **状态**：体力/健康/快乐相互影响，健康过低会生病折寿；快乐影响健康；体能决定恢复。
 - **结局**：寿终或病逝后按一生功过评定谥号与评分——武皇帝、文皇帝、明皇帝……还是哀皇帝？
 
 进度自动保存在浏览器 localStorage，也可随时手动存档/读档。
 
-## 本地运行
+## 技术栈
 
-无需构建，直接用浏览器打开 `index.html` 即可；或起一个静态服务器：
+- 纯前端：原生 ES Modules + 手写 SVG 交互舆图/程序化头像，零运行时依赖
+- [Vite](https://vite.dev/) 构建（打包压缩），npm 工程化管理
+- GitHub Actions CI/CD：push 到 `main` 自动跑测试、构建并部署到 GitHub Pages
+
+## 本地开发
 
 ```bash
-python3 -m http.server 8000
-# 打开 http://localhost:8000
+npm install
+npm run dev      # 开发服务器
+npm run build    # 构建到 dist/
+npm run preview  # 预览构建产物
 ```
 
 ## 测试
 
 ```bash
-node test/sim.js    # 引擎逻辑 + 数值平衡无头模拟
-node test/smoke.js  # UI 渲染冒烟测试（最小 DOM 桩）
+npm test         # = node test/sim.js && node test/smoke.js
+node test/preview.js  # 生成 SVG 场景预览（test/preview/，可用 rsvg-convert 转 PNG 查看）
 ```
+
+- `test/sim.js` —— 引擎逻辑 + 数值平衡无头模拟（勤勉玩家/昏君两种剧本跑数十年）
+- `test/smoke.js` —— UI 渲染冒烟测试（最小 DOM 桩驱动点击）
 
 ## 部署
 
-GitHub Pages 从 `main` 分支根目录直接发布。
+`.github/workflows/deploy.yml`：测试 → 构建 → `actions/deploy-pages` 发布。
+Pages 来源需设为 **GitHub Actions**（仓库 Settings → Pages → Source）。
 
 ## 免责
 

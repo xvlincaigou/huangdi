@@ -5,18 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>皇帝成长计划 · 网页复刻版</title>
 <meta name="description" content="经典4399小游戏《皇帝成长计划》的网页复刻版：上朝理政、科举选才、后宫养成、征战天下。">
-<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div id="app">
   <header id="topbar">
-    <h1>皇帝成长计划</h1>
-    <div id="clock"></div>
-    <div id="topbtns">
-      <button class="btn small" data-cmd="save">存档</button>
-      <button class="btn small" data-cmd="load">读档</button>
-      <button class="btn small" data-cmd="help">帮助</button>
-      <button class="btn small danger" data-cmd="restart">新游戏</button>
+    <div id="banner">
+      <div id="bannerScene"></div>
+      <div class="banner-overlay">
+        <h1>皇帝成长计划</h1>
+        <div id="clock"></div>
+      </div>
+      <div id="topbtns">
+        <button class="btn small" data-cmd="save">存档</button>
+        <button class="btn small" data-cmd="load">读档</button>
+        <button class="btn small" data-cmd="help">帮助</button>
+        <button class="btn small danger" data-cmd="restart">新游戏</button>
+      </div>
     </div>
   </header>
   <section id="vitals"></section>
@@ -27,10 +31,9 @@
       <div id="logwrap"><h3>起居注</h3><div id="log"></div></div>
     </aside>
   </main>
+  <footer id="foot">名画素材来自公有领域馆藏（详见 <a href="assets/ATTRIBUTION.md">ATTRIBUTION</a>）· 粉丝致敬作品，仅供学习娱乐</footer>
 </div>
 <div id="modal" class="hidden"></div>
-<script src="js/data.js"></script>
-<script src="js/engine.js"></script>
-<script src="js/ui.js"></script>
+<script type="module" src="/src/main.js"></script>
 </body>
 </html>

@@ -1,5 +1,4 @@
 /* UI 冒烟测试：用最小 DOM 桩加载 ui.js，驱动渲染与点击，捕获运行时错误 */
-'use strict';
 
 /* ---------- 最小 DOM 桩 ---------- */
 function makeEl(tag) {
@@ -39,6 +38,7 @@ function getEl(sel) {
 
 globalThis.window = globalThis;
 globalThis.document = {
+  body: { className: '' },
   querySelector: getEl,
   createElement: tag => makeEl(tag),
   addEventListener(type, fn) { (this._listeners[type] = this._listeners[type] || []).push(fn); },
@@ -46,12 +46,10 @@ globalThis.document = {
   fire(type) { (this._listeners[type] || []).forEach(fn => fn()); }
 };
 
-/* ---------- 加载游戏 ---------- */
-require('../js/data.js');
-require('../js/engine.js');
-require('../js/ui.js');
+/* ---------- 加载游戏（先桩后导入） ---------- */
+const { Engine: E } = await import('../src/engine.js');
+await import('../src/ui.js');
 
-const E = globalThis.Engine;
 let failures = 0;
 function check(cond, label) {
   if (!cond) { failures++; console.error('  ✗ ' + label); }
@@ -67,6 +65,8 @@ check(panel().indexOf('宣政殿') >= 0, '初始渲染宣政殿');
 check(getEl('#clock').innerHTML.indexOf('建初') >= 0, '时钟显示年号');
 check(getEl('#vitals').innerHTML.indexOf('国库') >= 0, '状态条渲染');
 check(getEl('#attrs').innerHTML.indexOf('文学') >= 0, '属性栏渲染');
+check(getEl('#bannerScene').innerHTML.length > 10, '页头横幅渲染');
+check(globalThis.document.body.className === 'period-0', '时段氛围类名');
 
 /* ---------- 上朝与各部 ---------- */
 console.log('== 上朝 ==');
@@ -77,6 +77,7 @@ for (const tab of ['hu', 'li2', 'bing', 'xing', 'gong', 'li']) {
   check(getEl('#courtBody').innerHTML.length > 100, '切换到' + tab + '部标签');
 }
 check(getEl('#courtBody').innerHTML.indexOf('百官考课') >= 0, '吏部官员表渲染');
+check(getEl('#courtBody').innerHTML.indexOf('<svg') >= 0, '官员头像渲染');
 // 正月不行科举，先推进到二月再试
 clickPanel({ act: 'endCourt' });
 clickPanel({ act: 'rest' });
@@ -95,24 +96,27 @@ if (落榜Btn) 落榜Btn.onclick();
 check(getEl('#modal').classList.contains('hidden'), '选择后弹窗关闭');
 clickPanel({ act: 'endCourt' });
 check(panel().indexOf('皇城舆图') >= 0, '退朝后显示皇城舆图');
+check(panel().indexOf('data-goto') >= 0, '舆图含可点击区域');
 
-/* ---------- 自由行动 ---------- */
-console.log('== 自由行动 ==');
-for (const act of ['study', 'martial']) {
-  clickPanel({ act });
-  check(panel().length > 50, '行动 ' + act + ' 后面板重渲染');
-}
+/* ---------- 地点与自由行动 ---------- */
+console.log('== 地点与自由行动 ==');
+clickPanel({ goto: 'study' });
+check(panel().indexOf('藏书阁') >= 0 && panel().indexOf('苦读诗书') >= 0, '藏书阁地点页');
+clickPanel({ act: 'study' });
+check(panel().indexOf('皇城舆图') >= 0, '行动后返回舆图并推进时段');
+clickPanel({ goto: 'martial' });
+check(panel().indexOf('习武场') >= 0, '习武场地点页');
+clickPanel({ act: 'martial' });
 check(panel().indexOf('安寝') >= 0, '深夜显示安寝面板');
 clickPanel({ act: 'sleep' });
 check(panel().indexOf('宣政殿') >= 0 || getEl('#modal').innerHTML.indexOf('灾情') >= 0, '安寝进入新月');
 
 /* ---------- 后宫 ---------- */
 console.log('== 后宫 ==');
-// 推进到晌午
 clickPanel({ act: 'skipCourt' });
-clickPanel({ act: 'openHarem' });
+clickPanel({ goto: 'harem' });
 check(panel().indexOf('后宫') >= 0 && panel().indexOf('皇后') >= 0, '后宫面板显示皇后');
-clickPanel({ act: 'closeHarem' });
+clickPanel({ act: 'closePlace' });
 check(panel().indexOf('皇城舆图') >= 0, '返回舆图');
 
 /* ---------- 连续跑 24 个月 ---------- */
@@ -120,18 +124,15 @@ console.log('== 长跑 ==');
 let err = null;
 try {
   for (let i = 0; i < 24; i++) {
-    // 通过面板点击驱动完整一月
     clickPanel({ act: 'holdCourt' });
     if (panel().indexOf('早朝') < 0) clickPanel({ act: 'skipCourt' });
     else clickPanel({ act: 'endCourt' });
+    clickPanel({ goto: 'study' });
     clickPanel({ act: 'study' });
     clickPanel({ act: 'rest' });
     clickPanel({ act: 'sleep' });
-    // 若出现灾情弹窗，选择置之不理（通过引擎层，桩中直接关闭）
     const m = getEl('#modal');
-    if (m.innerHTML.indexOf('灾情急报') >= 0) {
-      m.classList.add('hidden');
-    }
+    if (m.innerHTML.indexOf('灾情急报') >= 0) m.classList.add('hidden');
   }
 } catch (e) { err = e; }
 check(!err, '24 个月面板驱动无异常' + (err ? '：' + err.message : ''));

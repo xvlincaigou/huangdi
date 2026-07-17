@@ -27,20 +27,33 @@ body {
 
 #app { max-width: 1180px; margin: 0 auto; padding: 10px 14px 30px; }
 
-/* ===== 顶栏 ===== */
-#topbar {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  border-bottom: 2px solid var(--gold-dim);
-  padding: 8px 4px 10px;
+/* ===== 顶栏横幅 ===== */
+#topbar { margin-bottom: 4px; }
+#banner {
+  position: relative; border: 1px solid var(--gold-dim); border-radius: 8px;
+  overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.5);
+  background: #0d0f18;
 }
-#topbar h1 {
-  font-size: 28px; letter-spacing: 10px; color: var(--gold);
-  text-shadow: 0 0 12px rgba(212,175,55,.35);
+#bannerScene img, #bannerScene svg {
+  display: block; width: 100%; height: 168px; object-fit: cover;
+}
+#banner::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(10,8,6,.15), rgba(10,8,6,.55));
+  pointer-events: none;
+}
+.banner-overlay {
+  position: absolute; left: 26px; bottom: 14px; z-index: 2;
+  display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap;
+}
+.banner-overlay h1 {
+  font-size: 34px; letter-spacing: 12px; color: var(--gold);
+  text-shadow: 0 2px 8px rgba(0,0,0,.9), 0 0 20px rgba(212,175,55,.4);
   font-weight: 700;
 }
-#clock { font-size: 17px; color: var(--text); letter-spacing: 2px; }
+#clock { font-size: 16px; color: var(--text); letter-spacing: 2px; text-shadow: 0 1px 4px rgba(0,0,0,.9); }
 #clock .period { color: var(--gold); }
-#topbtns { margin-left: auto; display: flex; gap: 8px; }
+#topbtns { position: absolute; right: 14px; top: 12px; z-index: 2; display: flex; gap: 8px; }
 
 /* ===== 按钮 ===== */
 .btn {
@@ -148,8 +161,57 @@ table.tb td.fine { color: var(--good); }
 .msg-bad { color: var(--bad); }
 .msg-gold { color: var(--gold); }
 
+/* ===== 场景画框 ===== */
+.scene-frame {
+  border: 1px solid var(--gold-dim); border-radius: 8px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,.55), inset 0 0 0 4px rgba(23,18,14,.6);
+  margin-bottom: 12px; background: #0d0f18;
+}
+.scene-frame img, .scene-frame svg { display: block; width: 100%; height: auto; }
+.scene-frame img { aspect-ratio: 5 / 2; object-fit: cover; }
+
+/* 舆图可点击区域 */
+.map-frame { background: #2a3a2a; }
+.map-frame .zone { cursor: pointer; transition: filter .15s, opacity .15s; }
+.map-frame .zone:hover { filter: brightness(1.4) drop-shadow(0 0 8px rgba(232,200,90,.8)); }
+.map-frame .lbl {
+  fill: #e8c85a; stroke: #2a1f14; stroke-width: 3px; paint-order: stroke;
+  letter-spacing: 2px; font-family: "STKaiti", "KaiTi", "Kaiti SC", serif; pointer-events: none;
+}
+.plq, .scene-frame text { font-family: "STKaiti", "KaiTi", "Kaiti SC", serif; }
+
+/* 头像 */
+td.av { width: 46px; padding: 2px !important; }
+td.av svg { display: block; margin: 0 auto; border-radius: 50%; box-shadow: 0 0 0 1px var(--gold-dim); }
+
+/* ===== 时段氛围 ===== */
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 60;
+  transition: background-color 1.2s ease;
+}
+body.period-0::after { background-color: rgba(255, 170, 60, .05); }
+body.period-1::after { background-color: rgba(255, 240, 200, .02); }
+body.period-2::after { background-color: rgba(200, 90, 30, .08); }
+body.period-3::after { background-color: rgba(10, 20, 60, .16); }
+
+/* ===== SVG 动效 ===== */
+.anim-cloud { animation: drift 46s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: translateX(-24px); } to { transform: translateX(24px); } }
+.anim-lantern { animation: flicker 2.2s ease-in-out infinite alternate; }
+@keyframes flicker { from { opacity: .82; } to { opacity: 1; } }
+.anim-smoke { animation: smokerise 3.6s ease-in-out infinite alternate; }
+@keyframes smokerise { from { transform: translateY(0); opacity: .5; } to { transform: translateY(-6px); opacity: .25; } }
+
+/* ===== 页脚 ===== */
+#foot {
+  margin-top: 18px; padding-top: 10px; border-top: 1px solid #3a2f22;
+  color: var(--text-dim); font-size: 13px; text-align: center;
+}
+#foot a { color: var(--gold-dim); }
+
 @media (max-width: 900px) {
   main { flex-direction: column; }
   #sidebar { width: 100%; }
-  #topbar h1 { font-size: 22px; letter-spacing: 6px; }
+  .banner-overlay h1 { font-size: 24px; letter-spacing: 6px; }
+  #bannerScene img, #bannerScene svg { height: 120px; }
 }
