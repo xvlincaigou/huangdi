@@ -1,0 +1,155 @@
+/* 皇帝成长计划 · 网页复刻版 —— 古风暗色主题 */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #17120e;
+  --ink2: #221a14;
+  --paper: #2a211a;
+  --gold: #d4af37;
+  --gold-dim: #9c822f;
+  --red: #a63a2e;
+  --red-dark: #7c2a21;
+  --text: #e8dcc0;
+  --text-dim: #a89878;
+  --good: #7fb069;
+  --bad: #d1604f;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  color: var(--text);
+  font-family: "STKaiti", "KaiTi", "Kaiti SC", "SimSun", serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+#app { max-width: 1180px; margin: 0 auto; padding: 10px 14px 30px; }
+
+/* ===== 顶栏 ===== */
+#topbar {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  border-bottom: 2px solid var(--gold-dim);
+  padding: 8px 4px 10px;
+}
+#topbar h1 {
+  font-size: 28px; letter-spacing: 10px; color: var(--gold);
+  text-shadow: 0 0 12px rgba(212,175,55,.35);
+  font-weight: 700;
+}
+#clock { font-size: 17px; color: var(--text); letter-spacing: 2px; }
+#clock .period { color: var(--gold); }
+#topbtns { margin-left: auto; display: flex; gap: 8px; }
+
+/* ===== 按钮 ===== */
+.btn {
+  font-family: inherit; font-size: 15px; cursor: pointer;
+  background: linear-gradient(180deg, #3a2c1e, #2a1f16);
+  color: var(--gold); border: 1px solid var(--gold-dim);
+  border-radius: 4px; padding: 7px 16px; letter-spacing: 2px;
+  transition: all .15s;
+}
+.btn:hover:not(:disabled) { background: linear-gradient(180deg, #4a3826, #33261a); box-shadow: 0 0 8px rgba(212,175,55,.3); }
+.btn:disabled { opacity: .38; cursor: not-allowed; }
+.btn.small { padding: 4px 12px; font-size: 14px; }
+.btn.danger { color: #e8a49a; border-color: var(--red-dark); }
+.btn.primary { background: linear-gradient(180deg, #7c2a21, #5c1f18); color: #f5d9a0; border-color: var(--red); }
+.btn.block { display: block; width: 100%; margin-top: 6px; }
+
+/* ===== 状态条 ===== */
+#vitals {
+  display: flex; flex-wrap: wrap; gap: 6px 18px;
+  padding: 8px 6px; margin: 8px 0;
+  background: var(--ink2); border: 1px solid #3a2f22; border-radius: 6px;
+  font-size: 15px;
+}
+#vitals .v { white-space: nowrap; }
+#vitals .v b { color: var(--gold); font-weight: 600; }
+#vitals .v.low b { color: var(--bad); }
+
+/* ===== 主区 ===== */
+main { display: flex; gap: 12px; align-items: flex-start; }
+#panel {
+  flex: 1; min-width: 0; background: var(--paper);
+  border: 1px solid #3a2f22; border-radius: 6px;
+  padding: 14px 16px; min-height: 480px;
+}
+#sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
+
+#attrs {
+  background: var(--ink2); border: 1px solid #3a2f22; border-radius: 6px;
+  padding: 10px 12px; font-size: 15px;
+}
+#attrs h3, #logwrap h3 {
+  color: var(--gold); font-size: 16px; letter-spacing: 4px;
+  border-bottom: 1px solid #3a2f22; padding-bottom: 4px; margin-bottom: 6px;
+}
+#attrs .row { display: flex; justify-content: space-between; padding: 1px 0; }
+#attrs .row .val { color: var(--gold); }
+
+#logwrap { background: var(--ink2); border: 1px solid #3a2f22; border-radius: 6px; padding: 10px 12px; }
+#log { height: 300px; overflow-y: auto; font-size: 14px; color: var(--text-dim); }
+#log p { padding: 2px 0; border-bottom: 1px dashed #33291d; }
+#log p.new { color: var(--text); }
+#log p.important { color: var(--gold); }
+#log p.bad { color: var(--bad); }
+#log p.good { color: var(--good); }
+
+/* ===== 面板通用 ===== */
+#panel h2 {
+  color: var(--gold); font-size: 21px; letter-spacing: 6px;
+  border-bottom: 1px solid var(--gold-dim); padding-bottom: 6px; margin-bottom: 10px;
+}
+#panel h4 { color: var(--gold); margin: 12px 0 6px; letter-spacing: 2px; }
+#panel .desc { color: var(--text-dim); font-size: 14px; margin-bottom: 10px; }
+#panel .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+#panel .place {
+  background: var(--ink2); border: 1px solid #3a2f22; border-radius: 6px;
+  padding: 10px; text-align: center;
+}
+#panel .place .name { color: var(--gold); font-size: 17px; letter-spacing: 3px; margin-bottom: 2px; }
+#panel .place .sub { color: var(--text-dim); font-size: 13px; min-height: 20px; }
+#panel .place .btn { margin-top: 6px; }
+
+/* ===== 表格 ===== */
+table.tb { width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0; }
+table.tb th, table.tb td { border: 1px solid #3a2f22; padding: 5px 6px; text-align: center; }
+table.tb th { background: #33281c; color: var(--gold); letter-spacing: 1px; }
+table.tb td.warn { color: var(--bad); }
+table.tb td.fine { color: var(--good); }
+
+/* =====  Tabs ===== */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.tabs .btn.active { background: linear-gradient(180deg, #7c2a21, #5c1f18); color: #f5d9a0; border-color: var(--red); }
+
+/* ===== 弹窗 ===== */
+#modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.72);
+  display: flex; align-items: center; justify-content: center; z-index: 99;
+}
+#modal.hidden { display: none; }
+#modal .box {
+  background: var(--paper); border: 2px solid var(--gold-dim); border-radius: 8px;
+  max-width: 560px; width: 92%; max-height: 84vh; overflow-y: auto;
+  padding: 18px 20px; box-shadow: 0 0 40px rgba(0,0,0,.8);
+}
+#modal .box h3 { color: var(--gold); letter-spacing: 4px; margin-bottom: 10px; font-size: 19px; }
+#modal .box .body { font-size: 15px; }
+#modal .box .actions { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ===== 结局 ===== */
+.ending { text-align: center; padding: 30px 10px; }
+.ending .谥号 { font-size: 40px; color: var(--gold); letter-spacing: 12px; margin: 18px 0; text-shadow: 0 0 18px rgba(212,175,55,.5); }
+.ending .score { font-size: 20px; color: var(--text); margin: 10px 0; }
+.ending .detail { color: var(--text-dim); font-size: 15px; max-width: 520px; margin: 12px auto; text-align: left; }
+
+.msg-ok { color: var(--good); }
+.msg-bad { color: var(--bad); }
+.msg-gold { color: var(--gold); }
+
+@media (max-width: 900px) {
+  main { flex-direction: column; }
+  #sidebar { width: 100%; }
+  #topbar h1 { font-size: 22px; letter-spacing: 6px; }
+}

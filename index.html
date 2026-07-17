@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>皇帝成长计划 · 网页复刻版</title>
+<meta name="description" content="经典4399小游戏《皇帝成长计划》的网页复刻版：上朝理政、科举选才、后宫养成、征战天下。">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <h1>皇帝成长计划</h1>
+    <div id="clock"></div>
+    <div id="topbtns">
+      <button class="btn small" data-cmd="save">存档</button>
+      <button class="btn small" data-cmd="load">读档</button>
+      <button class="btn small" data-cmd="help">帮助</button>
+      <button class="btn small danger" data-cmd="restart">新游戏</button>
+    </div>
+  </header>
+  <section id="vitals"></section>
+  <main>
+    <div id="panel"></div>
+    <aside id="sidebar">
+      <div id="attrs"></div>
+      <div id="logwrap"><h3>起居注</h3><div id="log"></div></div>
+    </aside>
+  </main>
+</div>
+<div id="modal" class="hidden"></div>
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
