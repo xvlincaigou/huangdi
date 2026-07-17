@@ -29,13 +29,19 @@ const SCENE_IMGS = {
 };
 function sceneHTML(name, caption) {
   if (SCENE_IMGS[name]) {
-    return '<div class="scene-frame"><img src="' + SCENE_IMGS[name] + '" alt="' + esc(caption || name) + '" loading="lazy"></div>';
+    return '<div class="scene-frame"><img src="' + SCENE_IMGS[name] + '" alt="' + esc(caption || name) + '" loading="lazy" onerror="window.__sceneFallback(this,\'' + name + '\')"></div>';
   }
   if (SCENES[name]) {
     return '<div class="scene-frame">' + SCENES[name](S ? S.period : 1) + '</div>';
   }
   return '';
 }
+/* 图片加载失败时回退到手绘 SVG 场景 */
+window.__sceneFallback = function (img, name) {
+  const div = img.parentNode;
+  if (SCENES[name]) div.innerHTML = SCENES[name](S ? S.period : 1);
+  else img.remove();
+};
 
 /* ---------- 地点配置 ---------- */
 const PLACES = {
@@ -447,7 +453,7 @@ function init() {
   // 页头横幅
   const bn = $('#bannerScene');
   if (bn) bn.innerHTML = SCENE_IMGS.banner
-    ? '<img src="' + SCENE_IMGS.banner + '" alt="千里江山">'
+    ? '<img src="' + SCENE_IMGS.banner + '" alt="千里江山" onerror="window.__sceneFallback(this,\'banner\')">'
     : SCENES.banner();
   bindEvents();
   render();
